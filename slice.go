@@ -17,9 +17,13 @@ const (
 
 type bytes []byte
 
-type Value struct {
-        Articles []template.HTML
+type HTMLS []template.HTML
+
+type Slice struct {
+        Articles HTMLS
 }
+
+type Handler func (w http.ResponseWriter, r *http.Request)
 
 func findDir(target string, files []os.FileInfo) bool {
         found := false
@@ -33,9 +37,9 @@ func findDir(target string, files []os.FileInfo) bool {
         return found
 }
 
-func readFiles(dir string) Value {
+func genSlice(dir string) Slice {
         p := ""
-        contents := make([]template.HTML, 100)
+        contents := make(HTMLS, 0)
 
         files, _ := ioutil.ReadDir(dir)
 
@@ -59,44 +63,36 @@ func readFiles(dir string) Value {
                 }
         }
 
+        fmt.Println("contents are")
         fmt.Println(contents)
 
-        v := Value{
+        s := Slice{
                 Articles: contents,
         }
 
-        return v
+        return s
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-        html, err := ioutil.ReadFile(Template)
+func genHandler(s Slice) (h Handler) {
+        return func(w http.ResponseWriter, r *http.Request) {
+                html, err := ioutil.ReadFile(Template)
 
-        if err != nil {
-                fmt.Println("error")
-                html = bytes("err")
+                if err != nil {
+                        fmt.Println("error")
+                }
+
+                t := template.New("template")
+                temp, err := t.Parse(string(html))
+
+                if err != nil {
+                }
+
+                err = temp.Execute(w, s)
+
+                if err != nil {
+                }
         }
 
-        t := template.New("template")
-        temp, err := t.Parse(string(html))
-
-        if err != nil {
-        }
-
-        a := make([]template.HTML, 1)
-        a[0] = template.HTML("<h2>Hello</h2>")
-
-        v := Value{
-                Articles: a,
-        }
-        err = temp.Execute(w, v)
-
-        if err != nil {
-        }
-
-        return
-}
-
-func render() {
 }
 
 func main() {
@@ -123,7 +119,8 @@ func main() {
         slicesDir := path.Join(dir, Target)
 
         fmt.Println(slicesDir)
-        readFiles(slicesDir)
+        slice := genSlice(slicesDir)
+        handler := genHandler(slice)
 
         http.Handle("/", http.FileServer(http.Dir("./")))
         http.HandleFunc("/go", handler)
