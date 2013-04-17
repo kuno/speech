@@ -119,7 +119,8 @@ func main() {
         if findDir(Target, infos) {
                 fmt.Println("Found slices directory")
         } else {
-                fmt.Println("Not found directory")
+                fmt.Printf("Can not found slice directory at %v", dir)
+                return
         }
 
         slicesDir := path.Join(dir, Target)
@@ -132,4 +133,3 @@ func main() {
         http.HandleFunc("/go", handler)
         http.ListenAndServe(listenAddr, nil)
 }
-
