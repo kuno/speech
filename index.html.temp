@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html version="g42dymwpi--nx"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Slices</title>
+<title>{{.Title}}</title>
 <meta charset="utf-8">
 <script src="./static/slides.js"></script>
 <meta name="viewport" content="width=1100,height=750">

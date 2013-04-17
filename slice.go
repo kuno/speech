@@ -7,19 +7,23 @@ import (
         "io/ioutil"
         "net/http"
         "html/template"
+        "github.com/russross/blackfriday"
 )
 
 const (
         Target = "slices"
         Template = "./index.html.temp"
-        listenAddr = "localhost:5000"
+        listenAddr = "0.0.0.0:5000"
 )
 
 type bytes []byte
 
+type HTML template.HTML
+
 type HTMLS []template.HTML
 
 type Slice struct {
+        Title string
         Articles HTMLS
 }
 
@@ -37,7 +41,7 @@ func findDir(target string, files []os.FileInfo) bool {
         return found
 }
 
-func genSlice(dir string) Slice {
+func genSlice(t, dir string) Slice {
         p := ""
         contents := make(HTMLS, 0)
 
@@ -53,13 +57,14 @@ func genSlice(dir string) Slice {
                 if f.Name() != "." {
                         p = path.Join(dir, f.Name())
 
-                        c, _ := ioutil.ReadFile(p)
+                        m, _ := ioutil.ReadFile(p)
 
                         // if err != nil {
                         //         return
                         // }
+                        h := blackfriday.MarkdownCommon(m)
 
-                        contents = append(contents, template.HTML(string(c)))
+                        contents = append(contents, template.HTML(string(h)))
                 }
         }
 
@@ -67,6 +72,7 @@ func genSlice(dir string) Slice {
         fmt.Println(contents)
 
         s := Slice{
+                Title: t,
                 Articles: contents,
         }
 
@@ -119,7 +125,7 @@ func main() {
         slicesDir := path.Join(dir, Target)
 
         fmt.Println(slicesDir)
-        slice := genSlice(slicesDir)
+        slice := genSlice(dir, slicesDir)
         handler := genHandler(slice)
 
         http.Handle("/", http.FileServer(http.Dir("./")))
